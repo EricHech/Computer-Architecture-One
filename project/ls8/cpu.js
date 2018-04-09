@@ -69,7 +69,7 @@ class CPU {
     // right now.)
 
     // !!! IMPLEMENT ME
-    let IR = this.ram.read(this.reg.PC);
+    let IR = this.ram.read(this.reg.PC); //.toString(2);
 
     // Debugging output
     //console.log(`${this.reg.PC}: ${IR.toString(2)}`);
@@ -86,12 +86,15 @@ class CPU {
 
     // !!! IMPLEMENT ME
     switch (IR) {
-      case '10011001':
-        return (this.reg[operandA] = operandB);
-      case '01000011':
-        return console.log(this.reg[operandA]);
-      case '00000001':
-        return this.stopClock();
+      case 153:
+        this.reg[operandA] = operandB;
+        break;
+      case 67:
+        console.log(this.reg[operandA]);
+        break;
+      case 1:
+        this.stopClock();
+        break;
     }
 
     // Increment the PC register to go to the next instruction. Instructions
@@ -101,7 +104,7 @@ class CPU {
 
     // !!! IMPLEMENT ME
     let toIncrement = IR >>> 6;
-    toIncrement = toIncrement.toString(10);
+    toIncrement = parseInt(toIncrement, 10);
     toIncrement += 1;
     this.reg.PC += toIncrement;
   }
