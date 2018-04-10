@@ -54,7 +54,7 @@ class CPU {
   alu(op, regA, regB) {
     switch (op) {
       case 'MUL':
-        // !!! IMPLEMENT ME
+        this.reg[regA] *= this.reg[regB];
         break;
     }
   }
@@ -69,7 +69,7 @@ class CPU {
     // right now.)
 
     // !!! IMPLEMENT ME
-    let IR = this.ram.read(this.reg.PC); //.toString(2);
+    let IR = this.reg.PC; //.toString(2);
 
     // Debugging output
     //console.log(`${this.reg.PC}: ${IR.toString(2)}`);
@@ -78,21 +78,23 @@ class CPU {
     // needs them.
 
     // !!! IMPLEMENT ME
-    let operandA = this.ram.read(this.reg.PC + 1);
-    let operandB = this.ram.read(this.reg.PC + 2);
+    let operandA = this.ram.read(IR + 1);
+    let operandB = this.ram.read(IR + 2);
 
     // Execute the instruction. Perform the actions for the instruction as
     // outlined in the LS-8 spec.
 
-    // !!! IMPLEMENT ME
-    switch (IR) {
-      case 153:
+    switch (this.ram.read(IR)) {
+      case 0b10011001:
         this.reg[operandA] = operandB;
         break;
-      case 67:
+      case 0b10101010:
+        this.alu('MUL', operandA, operandB);
+        break;
+      case 0b01000011:
         console.log(this.reg[operandA]);
         break;
-      case 1:
+      case 0b00000001:
         this.stopClock();
         break;
     }
@@ -103,10 +105,8 @@ class CPU {
     // for any particular instruction.
 
     // !!! IMPLEMENT ME
-    let toIncrement = IR >>> 6;
-    toIncrement = parseInt(toIncrement, 10);
-    toIncrement += 1;
-    this.reg.PC += toIncrement;
+    this.reg.PC++;
+    this.reg.PC += this.ram.read(IR) >>> 6;
   }
 }
 
