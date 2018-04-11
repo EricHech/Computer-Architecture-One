@@ -1,5 +1,6 @@
 const RAM = require('./ram');
 const CPU = require('./cpu');
+const fs = require('fs');
 
 /**
  * Load an LS8 program into memory
@@ -7,19 +8,20 @@ const CPU = require('./cpu');
  * TODO: load this from a file on disk instead of having it hardcoded
  */
 function loadMemory() {
-  const fileName = process.argv[2];
+  const file = process.argv[2];
 
-  const fs = require('fs');
   const program = fs
-    .readFileSync(fileName)
+    .readFileSync(file)
     .toString()
     .split('\n')
-    .reduce((array, line) => {
-      if (line[0] !== '#' && line !== '') {
-        return array.concat(line.slice(0, 8));
-      }
-      return array;
-    }, []);
+    .reduce((arr, elem) => {
+      return elem[0] !== '#' && elem !== ''
+        ? arr.concat(elem.slice(0, 8))
+        : arr;
+    }, [])
+    .filter(file => {
+      return file !== '\r';
+    });
 
   // Load the program into the CPU's memory a byte at a time
   for (let i = 0; i < program.length; i++) {

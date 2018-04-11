@@ -2,6 +2,16 @@
  * LS-8 v2.0 emulator skeleton code
  */
 
+const MUL = 0b10101010;
+const ADD = 0b10101000;
+const LDI = 0b10011001;
+const PRN = 0b01000011;
+const POP = 0b01001100;
+const PUSH = 0b01001101;
+const CALL = 0b01001000;
+const RET = 0b00001001;
+const HLT = 0b00000001;
+
 /**
  * Class for simulating a simple Computer (CPU & memory)
  */
@@ -16,6 +26,8 @@ class CPU {
 
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
+
+    this.flag = false;
   }
 
   /**
@@ -56,6 +68,9 @@ class CPU {
       case 'MUL':
         this.reg[regA] *= this.reg[regB];
         break;
+      case 'ADD':
+        this.reg[regA] += this.reg[regB];
+        break;
     }
   }
 
@@ -84,17 +99,43 @@ class CPU {
     // Execute the instruction. Perform the actions for the instruction as
     // outlined in the LS-8 spec.
 
+    const _push = value => {
+      this.reg[8]--;
+      this.ram.write(this.reg[7], value);
+    };
+
     switch (this.ram.read(IR)) {
-      case 0b10011001:
+      case LDI:
         this.reg[operandA] = operandB;
         break;
-      case 0b10101010:
+      case MUL:
         this.alu('MUL', operandA, operandB);
         break;
-      case 0b01000011:
+      case ADD:
+        this.alu('ADD', operandA, operandB);
+        break;
+      case PUSH:
+        if (this.reg[7] === 0) this.reg[7] = 0xf4;
+        _push(this.reg[operandA]);
+        break;
+      case POP:
+        this.reg[operandA] = this.ram.read(this.reg[7]);
+        this.reg[7]++;
+        break;
+      case CALL:
+        this.flag = true;
+        _push(this.reg.PC + 2);
+        this.reg.PC = this.reg[operandA];
+        break;
+      case RET:
+        this.flag = true;
+        this.reg.PC = this.ram.read(this.reg[7]);
+        this.reg[7]++;
+        break;
+      case PRN:
         console.log(this.reg[operandA]);
         break;
-      case 0b00000001:
+      case HLT:
         this.stopClock();
         break;
     }
@@ -105,8 +146,11 @@ class CPU {
     // for any particular instruction.
 
     // !!! IMPLEMENT ME
-    this.reg.PC++;
-    this.reg.PC += this.ram.read(IR) >>> 6;
+    if (!this.flag) {
+      this.reg.PC++;
+      this.reg.PC += this.ram.read(IR) >> 6;
+    }
+    this.flag = false;
   }
 }
 
