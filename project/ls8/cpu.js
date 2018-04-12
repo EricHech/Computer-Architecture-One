@@ -93,6 +93,9 @@ class CPU {
     // Debugging output
     //console.log(`${this.reg.PC}: ${IR.toString(2)}`);
 
+    // Debugging output because the IR variable is not exactly correct
+    //console.log(`${IR}: ${this.ram.read(IR).toString(2)}`);
+
     // Get the two bytes in memory _after_ the PC in case the instruction
     // needs them.
 
