@@ -12,6 +12,8 @@ const CALL = 0b01001000;
 const RET = 0b00001001;
 const HLT = 0b00000001;
 
+const SP = 7;
+
 /**
  * Class for simulating a simple Computer (CPU & memory)
  */
@@ -26,6 +28,8 @@ class CPU {
 
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
+
+    this.reg[SP] = 0xf4;
 
     this.flag = false;
   }
@@ -100,8 +104,8 @@ class CPU {
     // outlined in the LS-8 spec.
 
     const _push = value => {
-      this.reg[8]--;
-      this.ram.write(this.reg[7], value);
+      this.reg[SP]--;
+      this.ram.write(this.reg[SP], value);
     };
 
     switch (this.ram.read(IR)) {
@@ -115,12 +119,11 @@ class CPU {
         this.alu('ADD', operandA, operandB);
         break;
       case PUSH:
-        if (this.reg[7] === 0) this.reg[7] = 0xf4;
         _push(this.reg[operandA]);
         break;
       case POP:
-        this.reg[operandA] = this.ram.read(this.reg[7]);
-        this.reg[7]++;
+        this.reg[operandA] = this.ram.read(this.reg[SP]);
+        this.reg[SP]++;
         break;
       case CALL:
         this.flag = true;
@@ -129,8 +132,8 @@ class CPU {
         break;
       case RET:
         this.flag = true;
-        this.reg.PC = this.ram.read(this.reg[7]);
-        this.reg[7]++;
+        this.reg.PC = this.ram.read(this.reg[SP]);
+        this.reg[SP]++;
         break;
       case PRN:
         console.log(this.reg[operandA]);
