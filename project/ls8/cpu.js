@@ -14,12 +14,20 @@ const IRET = 0b00001011;
 const PRN = 0b01000011;
 const PRA = 0b01000010;
 const ST = 0b10011010;
+const CMP = 0b10100000;
+const JEQ = 0b01010001;
+const JNE = 0b01010010;
 const HLT = 0b00000001;
 
 // System-utilized general purpose registers
 const IM = 5; // Interrupt Mask:    register R5
 const IS = 6; // Interrupt Status:  register R6
 const SP = 7; // Stack Pointer:     register R7
+
+// Flag values, less, greater, or equal to
+const FL_L = 0x1 << 2;
+const FL_G = 0x1 << 1;
+const FL_E = 0x1 << 0;
 
 // Interrupt mask bits
 const intMask = [
@@ -47,6 +55,8 @@ class CPU {
 
     // Special-purpose registers
     this.reg.PC = 0; // Program Counter
+
+    this.reg.FL = 0b00000000;
 
     this.reg[SP] = 0xf4;
 
@@ -126,6 +136,7 @@ class CPU {
           this.ITenabled = false;
           this.reg[IS] &= ~intMask[i];
           _push(this.reg.PC);
+          _push(this.reg.FL);
           for (let j = 0; j <= 6; j++) {
             _push(this.reg[j]);
           }
@@ -196,6 +207,7 @@ class CPU {
         for (let i = 6; i >= 0; i--) {
           this.reg[i] = _pop();
         }
+        this.reg.FL = _pop();
         this.reg.PC = _pop();
         break;
       case PRN:
@@ -203,6 +215,26 @@ class CPU {
         break;
       case PRA:
         console.log(String.fromCharCode(this.reg[operandA]));
+        break;
+      case CMP:
+        if (this.reg[operandA] === this.reg[operandB]) this.reg.FL |= FL_E;
+        else this.reg.FL &= ~FL_E;
+        if (this.reg[operandA] < this.reg[operandB]) this.reg.FL |= FL_L;
+        else this.reg.FL &= ~FL_L;
+        if (this.reg[operandA] > this.reg[operandB]) this.reg.FL |= FL_G;
+        else this.reg.FL &= ~FL_G;
+        break;
+      case JEQ:
+        if ((this.reg.FL &= 0b00000001) === 0b1) {
+          this.PCflag = true;
+          this.reg.PC = this.reg[operandA];
+        }
+        break;
+      case JNE:
+        if ((this.reg.FL &= 0b00000001) === 0b0) {
+          this.PCflag = true;
+          this.reg.PC = this.reg[operandA];
+        }
         break;
       case ST:
         this.ram.write(this.reg[operandA], this.reg[operandB]);
